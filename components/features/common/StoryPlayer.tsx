@@ -302,7 +302,8 @@ const StoryPlayer: React.FC<StoryPlayerProps> = ({ story }) => {
         )}
         {aiFeedback && !aiLoading && (
           <div className="mt-12 max-w-3xl mx-auto p-6 bg-muted/50 rounded-xl border border-border shadow-inner text-left">
-            <h3 className="text-2xl font-bold text-foreground mb-3">
+            <h3 className="text-2xl font-bold text-foreground mb-3"
+            >
               {LOCALIZED_CONTENT.aiFeedback?.[language] || 'Feedback'}
             </h3>
             <p className="text-foreground/90 whitespace-pre-line">{aiFeedback}</p>

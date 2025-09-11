@@ -161,6 +161,7 @@ export const LOCALIZED_CONTENT: Record<string, { [key in Language]: string }> = 
   storyModeDescription: { [Language.EN]: 'Experience an interactive narrative to build empathy and understand autistic adult\'s experience better.', [Language.VN]: 'Trải nghiệm một câu chuyện tương tác để xây dựng sự đồng cảm và thấu hiểu người tự kỷ trưởng thành hơn.' },
   chooseYourMode: { [Language.EN]: 'Choose Your Mode', [Language.VN]: 'Chọn Chế Độ Của Bạn' },
   startPractice: { [Language.EN]: 'Start Practice', [Language.VN]: 'Bắt đầu Luyện tập' },
+  backToDashboard: { [Language.EN]: 'Back to Dashboard', [Language.VN]: 'Quay về Màn hình chính' },
   startStory: { [Language.EN]: 'Start Story', [Language.VN]: 'Bắt đầu Câu chuyện' },
   recommended: { [Language.EN]: 'Recommended First', [Language.VN]: 'Nên Bắt Đầu' },
 
@@ -169,7 +170,7 @@ export const LOCALIZED_CONTENT: Record<string, { [key in Language]: string }> = 
   hideChoices: { en: 'Hide Your Choices', vi: 'Ẩn lựa chọn của bạn' },
   yourChoice: { en: 'Your choice:', vi: 'Lựa chọn của bạn:' },
   generatingFeedback: { en: 'Generating feedback…', vi: 'Đang tạo phản hồi…' },
-  aiFeedback: { en: 'AI Feedback', vi: 'Phản hồi từ AI' },
+  aiFeedback: { [Language.EN]: 'AI Feedback', [Language.VN]: 'Phản hồi từ AI' },
   completeAllScenes: { en: 'Please make a selection in every scene to finish the story.', vi: 'Hãy chọn ở tất cả các cảnh để hoàn thành.' },
   nextScene: { [Language.EN]: 'Next Scene', [Language.VN]: 'Cảnh tiếp theo' },
   finishStory: { [Language.EN]: 'Finish Story', [Language.VN]: 'Kết thúc câu chuyện' },
@@ -361,7 +362,7 @@ export const STORY_CONTENT: Record<NarratorRole, Story> = {
 
     [NarratorRole.Jobseeker]: {
       title: { [Language.EN]: "Interactive Situational Story", [Language.VN]: "Câu chuyện Tình huống" },
-      description: { [Language.EN]: "You will be Lan, a high-functioning autistic adult finding her way in the professional world. Bạn sẽ hóa thân thành Lan, một người tự kỷ chức năng cao đang làm quen với con đường sự nghiệp của mình. Let's follow Lan's story of self-discovery and finding her place in the professional world.", [Language.VN]: "Theo dõi câu chuyện của Lan về việc khám phá bản thân và tìm vị trí trong thế giới chuyên nghiệp." },
+      description: { [Language.EN]: "Let's follow Lan's story of self-discovery and finding her place in the professional world.", [Language.VN]: "Theo dõi câu chuyện của Lan về việc khám phá bản thân và tìm vị trí trong thế giới chuyên nghiệp." },
       scenes: [
         {
           title: { [Language.EN]: "Scene 1: Masking", [Language.VN]: "Cảnh 1: Cố gắng hoà nhập" },
