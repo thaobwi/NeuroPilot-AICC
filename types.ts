@@ -1,4 +1,20 @@
 
+export type Story = {
+  title: Record<Language, string>;
+  description: Record<Language, string>;
+  scenes: Array<{
+    title: Record<Language, string>;
+    text: Record<Language, string>;
+    choices: Array<{
+      text: Record<Language, string>;
+      affirmation?: Record<Language, string>;
+      isMultiSelect?: boolean;
+    }>;
+  }>;
+  closingAffirmation: Record<Language, string>;
+};
+
+
 
 export enum NarratorRole {
   Jobseeker = 'Jobseeker',
@@ -104,12 +120,12 @@ export interface StoryScene {
   choices: StoryChoice[];
 }
 
-export interface Story {
-  title: { [key in Language]: string };
-  description: { [key in Language]: string };
-  scenes: StoryScene[];
-  closingAffirmation: { [key in Language]: string };
-}
+// export interface Story {
+//   title: { [key in Language]: string };
+//   description: { [key in Language]: string };
+//   scenes: StoryScene[];
+//   closingAffirmation: { [key in Language]: string };
+// }
 export interface StoryChoice {
   text: { [key in Language]: string };
   isMultiSelect?: boolean; // Indicates the 'title' of a multi-select group
@@ -122,11 +138,84 @@ export interface StoryScene {
   choices: StoryChoice[];
 }
 
-export interface Story {
-  title: { [key in Language]: string };
-  description: { [key in Language]: string };
-  scenes: StoryScene[];
-  closingAffirmation: { [key in Language]: string };
+// export interface Story {
+//   title: { [key in Language]: string };
+//   description: { [key in Language]: string };
+//   scenes: StoryScene[];
+//   closingAffirmation: { [key in Language]: string };
+// }
+
+
+export type PlaceholderKey =
+  | "TEAM_PHOTO"
+  | "BRAINSTORM"
+  | "TEAM_CALL"
+  | "BOOTCAMP"
+  | "MEETING_THUY"
+  | "IDEA_REFINEMENT"
+  | "TEAM_LAUGH"
+  | "SANDY_WORKSHOP"
+  | "DRAFT"
+  | "TRUNG_MEETING"
+  | "SURVEY"
+  | "FEEDBACK"
+  | "PROPOSAL"
+  | "KRISTEN"
+  | "BUG"
+  | "CODING"
+  | "SIMONA"
+  | "TROY"
+  | "FINAL_SPRINT"
+  | "REFLECTION"
+  | "GALLERY";
+
+  export type StoryEntry = {
+  id: string;
+  date: { [key in Language]: string };
+  body: { [key in Language]: string };
+  placeholderKey: PlaceholderKey;
+};
+
+type Trans = Record<Language, string>;
+export interface AboutSchema {
+  heroTitle: Trans;
+  heroSubtitle: Trans;
+  sections: {
+    ourStory: {
+      title: Trans;
+      p1: Trans;
+      p2: Trans;
+      p3: Trans;
+      list: Record<Language, string[]>;
+    };
+    foundingTeam: {
+      title: Trans;
+      intro: Trans;
+    };
+    evolution: {
+      title: Trans;
+      intro: Trans;
+      points: Record<Language, string[]>;
+      outro: Trans;
+    };
+    missionVision: {
+      title: Trans;
+    };
+    mission: Trans;
+    missionText: Trans;
+    vision: Trans;
+    visionText: Trans;
+    acknowledgements: {
+      title: Trans;
+      text: Trans;
+    };
+    research: {
+      title: Trans;
+      text: Trans;
+    };
+    developers: {
+      title: Trans;
+      lines: Record<Language, string[]>;
+    };
+  };
 }
-
-

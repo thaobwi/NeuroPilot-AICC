@@ -9,7 +9,9 @@ import DashboardPage from './pages/DashboardPage';
 import { Language, NarratorRole, AppMode, NarratorAppEmotion } from './types';
 import CalmBreathingGuide from './components/CalmBreathingGuide';
 import ModeSelectionPage from './pages/ModeSelectionPage';
+import OurStoryPage from './pages/OurStoryPage';
 import { NARRATORS } from './constants';
+import "./index.css";
 
 export const AppContext = React.createContext<{
   language: Language;
@@ -86,6 +88,9 @@ const App: React.FC = () => {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mode-selection" element={<ModeSelectionPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/ourStory" element={<OurStoryPage />} />
+
+
         </Routes>
       </HashRouter>
     </AppContext.Provider>
