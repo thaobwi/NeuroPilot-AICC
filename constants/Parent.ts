@@ -57,7 +57,7 @@ export const PARENT_CONTENT = {
         [Language.VN]: 'Sau khi luyện câu chuyện STAR, con tôi trả lời tự tin trong buổi phỏng vấn thực tập.',
       },
       videoUrl: '', // e.g., 'https://youtu.be/...'
-      thumbnail: '/Images/video_placeholder.jpg',
+      thumbnail: '/images/video_placeholder.jpg',
     },
     {
       id: 't2',
@@ -97,7 +97,7 @@ export const PARENT_CONTENT = {
         [Language.EN]: '15+ years supporting autistic teens and families. Focus on interview readiness and social coaching.',
         [Language.VN]: 'Hơn 15 năm hỗ trợ thanh thiếu niên tự kỷ và gia đình. Tập trung vào chuẩn bị phỏng vấn và huấn luyện kỹ năng xã hội.',
       },
-      photo: '/Images/psychologists/thu.jpg',
+      photo: '/images/psychologists/thu.jpg',
       contact: { email: 'thu.nguyen@example.com', website: '', phone: '' },
       bookingUrl: '',
       isAvailable: true,
@@ -114,7 +114,7 @@ export const PARENT_CONTENT = {
         [Language.EN]: 'Supports work readiness and executive skills for young adults.',
         [Language.VN]: 'Hỗ trợ sẵn sàng đi làm và kỹ năng điều hành cho thanh niên.',
       },
-      photo: '/Images/psychologists/linh.jpg',
+      photo: '/images/psychologists/linh.jpg',
       contact: { email: 'linh.pham@example.com', website: '', phone: '' },
       bookingUrl: '',
       isAvailable: false,
