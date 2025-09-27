@@ -1,6 +1,18 @@
-import { Narrator, NarratorRole, Language, Story, StoryEntry, PlaceholderKey /*, AboutSchema*/ } from "@/types";
+// src/constants/Ourstory.ts
+import { Language, StoryEntry, PlaceholderKey } from "@/types";
 
-export const OUR_STORY_CONTENT: {
+/** Per-tile media schema for the gallery. */
+export type GalleryItem = {
+  type: "image" | "video";
+  /** File name inside assets/Images/OurStory or assets/Videos/OurStory, OR a full URL */
+  file: string;
+  /** Optional poster image for videos (file name or URL) */
+  poster?: string;
+  /** Localized caption */
+  caption: Record<Language, string>;
+};
+
+export interface OurStoryContent {
   ui: {
     heroTitle: Record<Language, string>;
     diary: Record<Language, string>;
@@ -13,8 +25,13 @@ export const OUR_STORY_CONTENT: {
   entries: StoryEntry[];
   reflections: Record<Language, string>;
   appreciation: Record<Language, string[]>;
-  gallery: Record<Language, string[]>;
-} = {
+  /** Legacy captions-only gallery (kept for backward compatibility). */
+  gallery?: Record<Language, string[]>;
+  /** New per-item gallery that supports images & videos. */
+  galleryItems: GalleryItem[];
+}
+
+export const OUR_STORY_CONTENT: OurStoryContent = {
   ui: {
     heroTitle: {
       [Language.EN]: "🌍 Our Story – NeuroPilot AICC Journey",
@@ -253,7 +270,7 @@ export const OUR_STORY_CONTENT: {
       "Sandy Sinn – Founder of CPPWB and Suicide Prevention Educator, whose passion for accessibility reminded us that inclusion is not a checkbox but a mindset. Her late-night workshops lit the spark that kept us moving forward.",
       "Troy Yeo – Founder & COO driving AI-powered automation for SMB and Enterprises, who pushed us to think about scale, sustainability, and long-term impact. His direct feedback sharpened our strategy and strengthened our resolve.",
       "Hieu Phung – His valuable guidance and insights during our mentor sessions, helping us refine our direction with clarity and purpose.",
-      "Ngoc Quach – Assistant of Ms. Simona, who works closely with autistic teenagers, and who provided thoughtful perspectives that helped us better understand the day-to-day realities of our target community.",
+      "Ngoc Quach – A psychologist practicing since 2017, she specializes in supporting autistic teenagers, older individuals, and their families. Her work focuses on communication, emotional regulation, social skills, and family dynamics. She is dedicated to empowering families, strengthening connections,and encouraging self-advocacy as young people transition into adulthood.",
       "Kristen Lewis – Accessibility Mentor and Employment Inclusion Specialist at Imago Work in Hanoi, with six years of experience in vocational training for young adults with intellectual disabilities. Her expertise shaped our employer-focused features and reminded us to design for readiness on both sides of the hiring process.",
       "Thanh Thuý – An autistic social worker from Đà Nẵng, who shared her lived experiences with openness and generosity. Her stories grounded our project in reality and gave us the courage to tackle invisible barriers.",
       "Mr. Trung – Founder of the Vietnam Autism Project, whose decade of experience confirmed the “trust gap” as the heart of the problem. His insights became the backbone of our proposal.",
@@ -263,7 +280,7 @@ export const OUR_STORY_CONTENT: {
       "Sandy Sinn – Nhà sáng lập CPPWB và nhà giáo dục phòng ngừa tự tử, người đã nhắc chúng tôi rằng sự hòa nhập không chỉ là một mục cần đánh dấu mà là một cách suy nghĩ. Những buổi workshop của cô đã thắp lửa cho hành trình của chúng tôi.",
       "Troy Yeo – Nhà sáng lập & COO về tự động hoá AI cho SME và doanh nghiệp, người đã thúc đẩy chúng tôi suy nghĩ về khả năng mở rộng, tính bền vững và tác động lâu dài. Những phản hồi thẳng thắn của anh đã giúp chúng tôi tinh chỉnh chiến lược và củng cố quyết tâm thực hiện dự án.",
       "Hiếu Phùng – Những hướng dẫn và góc nhìn quý giá của anh trong các buổi cố vấn đã giúp chúng tôi định hình hướng đi một cách rõ ràng và có mục đích.",
-      "Ngọc Quách – Trợ lý của cô Simona, người sát cánh cùng các thanh thiếu niên tự kỷ, đã cho chúng tôi những góc nhìn chân thực, giúp thấu hiểu đời sống hàng ngày của người dùng mà dự án hướng tới.",
+      "Ngọc Quách – TLà một nhà tâm lý học hành nghề từ năm 2017, cô chuyên hỗ trợ thanh thiếu niên tự kỷ, người lớn tuổi và gia đình của họ. Công việc của cô tập trung vào giao tiếp, điều hòa cảm xúc, kỹ năng xã hội và động lực gia đình. Cô tận tâm trao quyền cho các gia đình, củng cố kết nối và khuyến khích sự tự vận động khi những người trẻ tuổi bước vào tuổi trưởng thành.",
       "Kristen Lewis – Người cố vấn về tiếp cận và chuyên gia hòa nhập việc làm tại Imago Work ở Hà Nội, với sáu năm kinh nghiệm đào tạo nghề cho thanh niên mắc khuyết tật trí tuệ. Kiến thức chuyên môn của cô đã định hình các tính năng hướng tới nhà tuyển dụng trong dự án của chúng tôi và nhắc nhở chúng tôi rằng cần thiết kế để cả hai bên – ứng viên và nhà tuyển dụng – đều sẵn sàng cho quá trình tuyển dụng.",
       "Thanh Thuý – Một nhân viên xã hội tự kỷ đến từ Đà Nẵng, người đã cởi mở và chân thành chia sẻ những trải nghiệm sống của mình. Những câu chuyện của cô đã giúp dự án của chúng tôi gắn liền với thực tế và tiếp thêm cho chúng tôi can đảm để đối mặt với những rào cản vô hình.",
       "Anh Trung – Sáng lập Dự án Tự kỷ Việt Nam, với kinh nghiệm hơn 10 năm, xác nhận “khoảng cách niềm tin” là cốt lõi vấn đề. Nhận định này trở thành xương sống cho đề xuất của chúng tôi.",
@@ -271,20 +288,73 @@ export const OUR_STORY_CONTENT: {
     ],
   },
 
+  // (Optional) Legacy captions-only list kept for backward compatibility.
   gallery: {
     [Language.EN]: [
       "Bootcamp Highlights",
       "Mentor Workshops",
       "Proposal Refinement Nights",
       "Prototype Screenshots",
-      "Final Team Video",
+      "Filming The Video",
     ],
     [Language.VN]: [
       "Điểm nhấn từ Bootcamp",
       "Workshop cùng Mentor",
       "Những đêm chỉnh sửa đề xuất",
       "Ảnh chụp sản phẩm mẫu",
-      "Video nhóm",
+      "Quay video",
     ],
   },
+
+  // NEW: Per-item gallery (use this going forward)
+  galleryItems: [
+    {
+      type: "video",
+      file: "bootcamp1.mov",
+      caption: {
+        [Language.EN]: "Bootcamp Highlights",
+        [Language.VN]: "Điểm nhấn Bootcamp",
+      },
+    },
+    {
+      type: "image",
+      file: "workshop.png",
+      caption: {
+        [Language.EN]: "Mentor Workshop with Sandy",
+        [Language.VN]: "Workshop cùng cô Sandy",
+      },
+    },
+    {
+      type: "video",
+      file: "proposal.mov",
+      caption: {
+        [Language.EN]: "Proposal Refinement Nights",
+        [Language.VN]: "Những đêm chỉnh sửa đề xuất",
+      },
+    },
+    {
+      type: "image",
+      file: "prototype.png",
+      caption: {
+        [Language.EN]: "Prototype Screens",
+        [Language.VN]: "Ảnh chụp prototype",
+      },
+    },
+    {
+      type: "video",
+      file: "filming.mov",
+      caption: {
+        [Language.EN]: "Filming The Video",
+        [Language.VN]: "Quay video",
+      },
+    },
+    {
+      type: "video",
+      file: "late.mov",
+      caption: {
+        [Language.EN]: "Late-night Debugging",
+        [Language.VN]: "Sửa lỗi đêm muộn",
+      },
+    },
+  ],
 };

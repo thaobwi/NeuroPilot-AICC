@@ -3,8 +3,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppContext } from '../App';
 import { HEADER_CONTENT } from '@/constants/Header';  
 import { Language, NarratorRole } from '../types';
-import LogoIcon from './icons/LogoIcon';
 import Tooltip from './Tooltip';
+
+
 
 const LanguageToggle: React.FC = () => {
   const { language, setLanguage } = useContext(AppContext);
@@ -51,7 +52,7 @@ const Header: React.FC = () => {
   const roleNavLinks = [
     { role: NarratorRole.Jobseeker, label: HEADER_CONTENT.roles.jobseeker[language], theme: 'blue', colorClass: 'hover:text-brand-blue-400' },
     { role: NarratorRole.Employer, label: HEADER_CONTENT.roles.employer[language], theme: 'purple', colorClass: 'hover:text-brand-purple-400' },
-    { role: NarratorRole.Parent, label: HEADER_CONTENT.roles.parent[language], theme: 'red', colorClass: 'hover:text-brand-red-300' },
+    { role: NarratorRole.CareGiver, label: HEADER_CONTENT.roles.CareGiver[language], theme: 'red', colorClass: 'hover:text-brand-red-300' },
     { role: NarratorRole.Volunteer, label: HEADER_CONTENT.roles.volunteer[language], theme: 'green', colorClass: 'hover:text-brand-green-400' },
   ];
 
@@ -59,10 +60,16 @@ const Header: React.FC = () => {
     <header className="force-light-theme bg-card/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <LogoIcon className="h-8 w-8 text-primary" />
-            <span className="font-display font-bold text-2xl text-foreground">AICC</span>
+            <img 
+              src='assets/Images/logo.png'
+              alt="AICC Logo" 
+              className="h-12 w-12 object-contain"
+            />
           </Link>
+
+          {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {navLinks.map((link) => (
               <Link
@@ -89,6 +96,8 @@ const Header: React.FC = () => {
               </button>
             ))}
           </nav>
+
+          {/* Language toggle */}
           <div className="flex items-center">
             <LanguageToggle />
           </div>

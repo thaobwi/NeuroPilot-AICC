@@ -2,34 +2,29 @@
 import React, { useContext, useState } from "react";
 import Layout from "../components/Layout";
 import { AppContext } from "../App";
-import { Language } from "../types";
+import { Language /*, PlaceholderKey */ } from "../types";
 import { OUR_STORY_CONTENT } from "../constants/Ourstory";
 
 // --- Normalize language (enum or string) ---
 const normalizeLang = (l: unknown): Language =>
   l === Language.VN || l === "vi" || l === "VN" ? Language.VN : Language.EN;
 
-/** Map placeholder keys -> image/video filenames living in:
- *  - public/Images/OurStory/<file>
- *  - public/Videos/OurStory/<file>
- *
- *  Rename these to match your real assets.
- */
 const MEDIA_IMAGE_MAP: Record<string, string> = {
-  TEAM_PHOTO: "team_photo.jpg",
-  BRAINSTORM: "brainstorm.jpg",
+  TEAM_PHOTO: "us.png",
+  BRAINSTORM:  "team_photo.jpg",
   TEAM_CALL: "team_call.jpg",
   BOOTCAMP: "bootcamp.jpg",
-  MEETING_THUY: "meeting_thuy.jpg",
+  MEETING_THUY: "meeting_thuy.png",
+  IDEA_REFİNEMENT: "idea_refinement.jpg", // keep your exact filename; left here for safety if renamed
   IDEA_REFINEMENT: "idea_refinement.jpg",
   TEAM_LAUGH: "team_laugh.jpg",
   SANDY_WORKSHOP: "sandy_workshop.jpg",
   DRAFT: "draft.jpg",
-  TRUNG_MEETING: "trung_meeting.jpg",
+  TRUNG_MEETING: "trung.jpg",
   SURVEY: "survey.jpg",
   FEEDBACK: "feedback.jpg",
   PROPOSAL: "proposal.jpg",
-  KRISTEN: "kristen.jpg",
+  KRISTEN: "kristen.png",
   BUG: "bug.jpg",
   CODING: "coding.jpg",
   SIMONA: "simona.png",
@@ -45,8 +40,8 @@ const MEDIA_VIDEO_MAP: Record<string, string> = {
   TEAM_CALL: "team_call.mp4",
   BOOTCAMP: "bootcamp.mov",
   MEETING_THUY: "meeting_thuy.mp4",
-  IDEA_REFINEMENT: "idea_refinement.mp4",
-  TEAM_LAUGH: "team_laugh.mp4",
+  IDEA_REFINEMENT: "debate.mov",
+  TEAM_LAUGH: "team_laugh.mov",
   SANDY_WORKSHOP: "sandy_workshop.mp4",
   DRAFT: "draft.mp4",
   TRUNG_MEETING: "trung_meeting.mp4",
@@ -64,28 +59,45 @@ const MEDIA_VIDEO_MAP: Record<string, string> = {
 };
 
 // Build public URL (Vite-safe). For CRA you could use process.env.PUBLIC_URL instead.
-const publicImage = (file: string) => `${import.meta.env.BASE_URL}assets/Images/OurStory/${file}`;
-const publicVideo = (file: string) => `${import.meta.env.BASE_URL}assets/Videos/OurStory/${file}`;
+const publicImage = (file: string) =>
+  `${import.meta.env.BASE_URL}assets/Images/OurStory/${file}`;
+const publicVideo = (file: string) =>
+  `${import.meta.env.BASE_URL}assets/Videos/OurStory/${file}`;
 
-// --- Fallback placeholder (if no image & no video available) ---
-const PlaceholderMedia: React.FC<{ label: string }> = ({ label }) => (
-  <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-slate-50 to-slate-100">
-    <div className="absolute inset-0 grid place-items-center">
-      <div className="rounded-lg bg-white/70 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm">
-        {label}
+/* -----------------------------------------------------------
+   PLACEHOLDER (supports fixed aspect ratio via aspectClass)
+----------------------------------------------------------- */
+const PlaceholderMedia: React.FC<{
+  label: string;
+  aspectClass?: string;
+}> = ({ label, aspectClass }) => {
+  const aspect = aspectClass || "aspect-[16/9]";
+  return (
+    <div
+      className={`relative ${aspect} w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-slate-50 to-slate-100`}
+    >
+      <div className="absolute inset-0 grid place-items-center">
+        <div className="rounded-lg bg-white/70 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm">
+          {label}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-/** Media block that tries image first; if the <img> fails to load (404), it falls back to <video>.
- *  If neither is present in the maps, it renders the placeholder label.
- */
+/* -----------------------------------------------------------
+   MEDIABLOCK
+   - Tries image; falls back to video if img 404.
+   - NEW: frameAspectClass enforces identical visible size.
+   - NEW: fit = "cover" (crop to fill) | "contain" (letterbox)
+----------------------------------------------------------- */
 const MediaBlock: React.FC<{
   placeholderKey: string;
   alt: string;
-  placeholderLabel: string; // localized label from UI.placeholders
-}> = ({ placeholderKey, alt, placeholderLabel }) => {
+  placeholderLabel: string;
+  frameAspectClass?: string; // e.g. "aspect-[4/3]", "aspect-video", "aspect-square"
+  fit?: "cover" | "contain"; // default cover
+}> = ({ placeholderKey, alt, placeholderLabel, frameAspectClass, fit = "cover" }) => {
   const [useVideo, setUseVideo] = useState(false);
 
   const imgFile = MEDIA_IMAGE_MAP[placeholderKey];
@@ -93,47 +105,138 @@ const MediaBlock: React.FC<{
   const hasImg = Boolean(imgFile);
   const hasVid = Boolean(vidFile);
 
-  // If we have neither file configured, render placeholder immediately
+  const fitClass = fit === "cover" ? "object-cover" : "object-contain";
+
+  const renderInFrame = (node: React.ReactNode) => (
+    <div
+      className={`relative w-full ${
+        frameAspectClass || "aspect-[16/9]"
+      } overflow-hidden rounded-xl bg-slate-100`}
+    >
+      <div className="absolute inset-0">{node}</div>
+    </div>
+  );
+
+  // Neither configured -> placeholder
   if (!hasImg && !hasVid) {
-    return <PlaceholderMedia label={placeholderLabel} />;
+    return <PlaceholderMedia label={placeholderLabel} aspectClass={frameAspectClass} />;
   }
 
-  // If image is configured and we haven't switched to video yet, try image
+  // Try image first
   if (hasImg && !useVideo) {
-    return (
+    const imgEl = (
+      <img
+        src={publicImage(imgFile)}
+        alt={alt}
+        className={`h-full w-full ${fitClass} object-center rounded-xl`}
+        onError={() => {
+          if (hasVid) setUseVideo(true);
+        }}
+        loading="lazy"
+      />
+    );
+    return frameAspectClass ? (
+      renderInFrame(imgEl)
+    ) : (
       <img
         src={publicImage(imgFile)}
         alt={alt}
         className="w-full h-auto rounded-xl object-cover"
         onError={() => {
-          // Only fall back to video if there is one configured
           if (hasVid) setUseVideo(true);
         }}
+        loading="lazy"
       />
     );
   }
 
-  // Otherwise, try video (autoplay muted inline looks nice on hero; here keep controls)
+  // Fallback: video
   if (hasVid) {
-    return (
+    const videoEl = (
+      <video
+        className={`h-full w-full ${fitClass} object-center rounded-xl`}
+        controls
+        playsInline
+        preload="metadata"
+        src={publicVideo(vidFile)}
+      >
+        <track kind="captions" />
+      </video>
+    );
+    return frameAspectClass ? (
+      renderInFrame(videoEl)
+    ) : (
       <video
         className="w-full h-auto rounded-xl"
         controls
         playsInline
-        // poster could be provided too if you have a matching image
+        preload="metadata"
         src={publicVideo(vidFile)}
       >
-        {/* As a super-hard fallback (if video fails), show label */}
         <track kind="captions" />
-        Sorry, your browser doesn't support embedded videos.
       </video>
     );
   }
 
   // Last resort
-  return <PlaceholderMedia label={placeholderLabel} />;
+  return <PlaceholderMedia label={placeholderLabel} aspectClass={frameAspectClass} />;
 };
 
+/* -----------------------------------------------------------
+   GALLERYMEDIA (for per-item galleryItems)
+   - Always uses a uniform frame.
+----------------------------------------------------------- */
+type GalleryItem = {
+  type: "image" | "video";
+  file: string; // filename in assets or full URL
+  poster?: string; // optional poster for videos
+  caption: Record<Language, string>;
+};
+
+const isHttp = (p?: string) => !!p && /^https?:\/\//i.test(p);
+const resolveSrc = (type: GalleryItem["type"], file: string) =>
+  isHttp(file) ? file : type === "image" ? publicImage(file) : publicVideo(file);
+const resolvePoster = (poster?: string) =>
+  poster ? (isHttp(poster) ? poster : publicImage(poster)) : undefined;
+
+const GalleryMedia: React.FC<{ item: GalleryItem; alt: string; aspect?: string; fit?: "cover" | "contain" }> = ({
+  item,
+  alt,
+  aspect = "aspect-[4/3]",
+  fit = "cover",
+}) => {
+  const src = resolveSrc(item.type, item.file);
+  const poster = resolvePoster(item.poster);
+  const fitClass = fit === "cover" ? "object-cover" : "object-contain";
+
+  return (
+    <div className={`relative w-full ${aspect} overflow-hidden rounded-xl bg-slate-100`}>
+      {item.type === "image" ? (
+        <img
+          src={src}
+          alt={alt}
+          className={`absolute inset-0 h-full w-full ${fitClass} object-center`}
+          loading="lazy"
+        />
+      ) : (
+        <video
+          className={`absolute inset-0 h-full w-full ${fitClass} object-center`}
+          controls
+          playsInline
+          preload="metadata"
+          poster={poster}
+          src={src}
+        >
+          <track kind="captions" />
+        </video>
+      )}
+    </div>
+  );
+};
+
+/* ===========================================================
+   PAGE
+=========================================================== */
 const OurStoryPage: React.FC = () => {
   const { language } = useContext(AppContext);
   const lang = normalizeLang(language);
@@ -160,6 +263,7 @@ const OurStoryPage: React.FC = () => {
               placeholderKey="TEAM_PHOTO"
               alt="Team"
               placeholderLabel={P.TEAM_PHOTO[lang]}
+              // HERO: keep natural media size (no fixed aspect here)
             />
           </div>
         </div>
@@ -187,11 +291,15 @@ const OurStoryPage: React.FC = () => {
                 )}
                 <p className="mt-3 whitespace-pre-line text-slate-800">{e.body[lang]}</p>
               </div>
+
+              {/* DIARY MEDIA: enforce SAME visible size across all entries */}
               <div className="rounded-2xl border border-border bg-white p-4 shadow-md">
                 <MediaBlock
                   placeholderKey={e.placeholderKey}
                   alt={e.title?.[lang] || e.date[lang]}
                   placeholderLabel={P[e.placeholderKey][lang]}
+                  frameAspectClass="aspect-[4/3]" // 👈 pick one aspect & keep consistent
+                  fit="cover"                      // 👈 or "contain" to avoid cropping
                 />
               </div>
             </article>
@@ -215,6 +323,9 @@ const OurStoryPage: React.FC = () => {
               placeholderKey="REFLECTION"
               alt="Reflection"
               placeholderLabel={P.REFLECTION[lang]}
+              // Keep natural sizing here unless you want a fixed frame too:
+              // frameAspectClass="aspect-[4/3]"
+              // fit="cover"
             />
           </div>
         </div>
@@ -240,21 +351,41 @@ const OurStoryPage: React.FC = () => {
         <h2 className="font-display text-3xl font-bold text-slate-900">
           {UI.media[lang]}
         </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {OUR_STORY_CONTENT.gallery[lang].map((g, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-border bg-white p-4 shadow-sm"
-            >
-              <MediaBlock
-                placeholderKey="GALLERY" // default gallery asset (image/video)
-                alt={g}
-                placeholderLabel={P.GALLERY[lang]}
-              />
-              <p className="mt-2 text-center text-sm font-medium text-slate-700">{g}</p>
-            </div>
-          ))}
-        </div>
+
+        {/* Prefer the new per-item gallery if available; otherwise fall back to legacy list */}
+        {Array.isArray((OUR_STORY_CONTENT as any).galleryItems) &&
+        (OUR_STORY_CONTENT as any).galleryItems.length > 0 ? (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(OUR_STORY_CONTENT as any).galleryItems.map((item: GalleryItem, i: number) => (
+              <div key={i} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+                <GalleryMedia
+                  item={item}
+                  alt={item.caption[lang]}
+                  aspect="aspect-[4/3]" // 👈 uniform frame for gallery tiles
+                  fit="cover"
+                />
+                <p className="mt-2 text-center text-sm font-medium text-slate-700">
+                  {item.caption[lang]}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {OUR_STORY_CONTENT.gallery?.[lang]?.map((g, i) => (
+              <div key={i} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+                <MediaBlock
+                  placeholderKey="GALLERY" // default gallery asset (image/video)
+                  alt={g}
+                  placeholderLabel={UI.placeholders.GALLERY[lang]}
+                  frameAspectClass="aspect-[4/3]" // 👈 uniform frame for legacy tiles too
+                  fit="cover"
+                />
+                <p className="mt-2 text-center text-sm font-medium text-slate-700">{g}</p>
+              </div>
+            )) || null}
+          </div>
+        )}
       </section>
 
       {/* inline wow-effects */}
