@@ -1,35 +1,34 @@
-// vite.config.ts
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, ".", ""); // loads .env, .env.local, etc.
+  const env = loadEnv(mode, process.cwd(), "");
 
   return {
     plugins: [react()],
-    // IMPORTANT for GitHub Pages
-    base: mode === "production" ? "/NeuroPilot-AICC/" : "/",
 
+    // GitHub Pages under /NeuroPilot-AICC/
+    // (You can keep the ternary, but locking it avoids surprises)
+    base: "/NeuroPilot-AICC/",
+
+    // Prefer Vite's import.meta.env with VITE_* keys
+    // Remove this whole "define" block after you migrate to VITE_*.
     define: {
-      // Keep your current exposure of env if your app reads process.env.*
       "process.env.API_KEY": JSON.stringify(env.GEMINI_API_KEY),
       "process.env.GEMINI_API_KEY": JSON.stringify(env.GEMINI_API_KEY),
-      // (FYI: the Vite-native way is import.meta.env.VITE_*)
     },
 
     resolve: {
       alias: {
-        // If you prefer '@/...' to point to project root; change to 'src' if you want '@/components' from /src/components
-        "@": path.resolve(__dirname, "."),
-        // "@": path.resolve(__dirname, "src"),
+        "@": path.resolve(__dirname, "src"), // <<— key change
       },
     },
 
     build: {
       outDir: "dist",
       assetsDir: "assets",
-      sourcemap: true, 
+      sourcemap: true,
     },
   };
 });
