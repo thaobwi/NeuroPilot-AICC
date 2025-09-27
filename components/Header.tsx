@@ -7,6 +7,7 @@ import { Language, NarratorRole } from "../types";
 import Tooltip from "./Tooltip";
 
 import logoUrl from "@/src/assets/images/logo.png"; 
+
 const LanguageToggle: React.FC = () => {
   const { language, setLanguage } = useContext(AppContext);
   const toggleLanguage = () => {
