@@ -21,7 +21,9 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "src"), // <<— key change
+        // '@' => project root (C:/.../NeuroPilot-AICC)
+        // why: your files are at ./components, ./constants, ./App.tsx, not under ./src
+        "@": path.resolve(__dirname, "."),
       },
     },
 

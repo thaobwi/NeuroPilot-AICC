@@ -1,24 +1,40 @@
+// components/features/jobseeker/InterviewPractice.tsx
 import React, { useState, useContext, useEffect } from "react";
 
 import { AppContext } from "@/App";
 import { DIALOGUE } from "@/constants";
 import type { StarFeedback } from "@/types";
 import VoiceInputButton from "@/components/VoiceInputButton";
-import Tooltip from "@/components/Tooltip";
-import { addHistoryEntry, type PracticeType as HistoryPracticeType } from "@/utils/History";
-import StarRating from "@/components/StarRating";
+import {
+  addHistoryEntry,
+  type PracticeType as HistoryPracticeType,
+} from "@/utils/History";
 import FeedbackDisplay from "@/components/FeedbackDisplay";
 import SavedQuestionsList from "@/components/SavedQuestionsList";
 import QuestionControls from "@/components/QuestionControls";
 import BookmarkIcon from "@/components/icons/BookmarkIcon";
 
-import { loadSavedQuestions, saveQuestion, removeSavedQuestion, isQuestionSaved, type SavedQuestion } from "@/utils/savedQuestions";
+import {
+  loadSavedQuestions,
+  saveQuestion,
+  removeSavedQuestion,
+  isQuestionSaved,
+  type SavedQuestion,
+} from "@/utils/savedQuestions";
 
-import { getInterviewFeedback, getImprovementSuggestion } from "@/services/geminiService";
+import {
+  getInterviewFeedback,
+  getImprovementSuggestion,
+} from "@/services/geminiService";
 
 type FlowStep = "setup" | "practice" | "summary";
 type PracticeType = "STAR Interview" | "Common Questions" | "Small Talk";
 type StarComponent = "situation" | "task" | "action" | "result";
+type PracticeStep = 1 | 2 | 3;
+
+interface InterviewPracticeProps {
+  onStepChange?: (step: PracticeStep) => void;
+}
 
 const MAX_ANSWER_LENGTH = 2000;
 
@@ -42,18 +58,40 @@ const questionSets: Record<PracticeType, string[]> = {
   ],
 };
 
-const InterviewPractice: React.FC = () => {
-  const { language, setNarratorDialogue, setNarratorState } = useContext(AppContext);
+const practiceMeta: Record<
+  PracticeType,
+  { tagline: string; icon: string }
+> = {
+  "STAR Interview": {
+    icon: "⭐",
+    tagline: "Practice structured STAR answers for behavioral questions.",
+  },
+  "Common Questions": {
+    icon: "❓",
+    tagline: "Warm up with classic interview questions.",
+  },
+  "Small Talk": {
+    icon: "💬",
+    tagline: "Gently practice casual conversation.",
+  },
+};
+
+const InterviewPractice: React.FC<InterviewPracticeProps> = ({ onStepChange }) => {
+  const { language, setNarratorDialogue, setNarratorState } =
+    useContext(AppContext);
 
   const [flowStep, setFlowStep] = useState<FlowStep>("setup");
-  const [practiceType, setPracticeType] = useState<PracticeType>("STAR Interview");
+  const [practiceType, setPracticeType] =
+    useState<PracticeType>("STAR Interview");
 
   const [questions, setQuestions] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<StarFeedback | null>(null);
-  const [suggestions, setSuggestions] = useState<Partial<Record<StarComponent, string>>>({});
+  const [suggestions, setSuggestions] = useState<
+    Partial<Record<StarComponent, string>>
+  >({});
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -77,13 +115,12 @@ const InterviewPractice: React.FC = () => {
         dialogueKey = "jobseekerPractice";
         setNarratorState("idle");
         break;
-      case "summary":
-        dialogueKey =
-          feedback?.overall.score && feedback.overall.score >= 4
-            ? "jobseekerSummary"
-            : "jobseekerFeedback";
-        setNarratorState(feedback?.overall.score && feedback.overall.score >= 4 ? "celebrating" : "explaining");
+      case "summary": {
+        const good = feedback?.overall.score && feedback.overall.score >= 4;
+        dialogueKey = good ? "jobseekerSummary" : "jobseekerFeedback";
+        setNarratorState(good ? "celebrating" : "explaining");
         break;
+      }
     }
     if (dialogueKey) setNarratorDialogue(DIALOGUE[dialogueKey][language]);
   }, [flowStep, language, setNarratorDialogue, feedback, setNarratorState]);
@@ -91,6 +128,25 @@ const InterviewPractice: React.FC = () => {
   useEffect(() => {
     if (isLoading) setNarratorState("thinking");
   }, [isLoading, setNarratorState]);
+
+  useEffect(() => {
+    if (!onStepChange) return;
+
+    if (flowStep === "setup") {
+      onStepChange(1);
+      return;
+    }
+
+    if (flowStep === "practice" && !isLoading) {
+      onStepChange(2);
+      return;
+    }
+
+    if (isLoading || flowStep === "summary") {
+      onStepChange(3);
+      return;
+    }
+  }, [flowStep, isLoading, onStepChange]);
 
   const startPractice = (type: PracticeType) => {
     setPracticeType(type);
@@ -105,7 +161,10 @@ const InterviewPractice: React.FC = () => {
 
   const startFromSaved = (q: string) => {
     setPracticeType("STAR Interview");
-    setQuestions([q, ...questionSets["STAR Interview"].filter((x) => x !== q)]);
+    setQuestions([
+      q,
+      ...questionSets["STAR Interview"].filter((x) => x !== q),
+    ]);
     setCurrentQuestionIndex(0);
     setAnswer("");
     setFeedback(null);
@@ -117,7 +176,9 @@ const InterviewPractice: React.FC = () => {
   const currentQuestion = questions[currentQuestionIndex] || "";
   const isFirst = currentQuestionIndex === 0;
   const isLast = currentQuestionIndex === Math.max(0, questions.length - 1);
-  const isBookmarked = currentQuestion ? isQuestionSaved(currentQuestion, saved) : false;
+  const isBookmarked = currentQuestion
+    ? isQuestionSaved(currentQuestion, saved)
+    : false;
 
   const toggleBookmark = () => {
     if (!currentQuestion) return;
@@ -137,27 +198,26 @@ const InterviewPractice: React.FC = () => {
     setIsLoading(true);
     setError("");
     setSuggestions({});
-  
+
     try {
       const fb = await getInterviewFeedback(currentQuestion, answer);
       setFeedback(fb);
       setFlowStep("summary");
-  
-      // --- NEW: save compact session history entry ---
+
       addHistoryEntry({
-        type: practiceType,                  // "STAR Interview" | "Common Questions" | "Small Talk"
+        type: practiceType as HistoryPracticeType,
         question: currentQuestion,
         overallScore: fb.overall?.score ?? 0,
-        // keep payload small (optional)
         answer: answer.length > 1000 ? `${answer.slice(0, 1000)}…` : answer,
         feedback: fb.overall ? { overall: fb.overall } : undefined,
       });
-      // --- end new code ---
-  
-      const toImprove: StarComponent[] = (Object.keys(fb) as (keyof StarFeedback)[])
+
+      const toImprove: StarComponent[] = (
+        Object.keys(fb) as (keyof StarFeedback)[]
+      )
         .filter((k) => k !== "overall" && (fb as any)[k]?.score < 4)
         .map((k) => k as StarComponent);
-  
+
       if (toImprove.length > 0) {
         setIsFetchingSuggestions(true);
         const settled = await Promise.all(
@@ -165,11 +225,13 @@ const InterviewPractice: React.FC = () => {
             getImprovementSuggestion(
               currentQuestion,
               answer,
-              (comp.charAt(0).toUpperCase() + comp.slice(1)) as any
-            ).then((res) => ({ [comp]: res.suggestion }))
-          )
+              (comp.charAt(0).toUpperCase() + comp.slice(1)) as any,
+            ).then((res) => ({ [comp]: res.suggestion })),
+          ),
         );
-        setSuggestions(settled.reduce((acc, cur) => ({ ...acc, ...cur }), {}));
+        setSuggestions(
+          settled.reduce((acc, cur) => ({ ...acc, ...cur }), {}),
+        );
         setIsFetchingSuggestions(false);
       }
     } catch (err: any) {
@@ -178,7 +240,6 @@ const InterviewPractice: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
 
   const resetForQuestion = (nextIndex: number) => {
     setCurrentQuestionIndex(nextIndex);
@@ -204,7 +265,6 @@ const InterviewPractice: React.FC = () => {
   };
 
   const skipQuestion = () => {
-    // Skip behaves like next without requiring an answer
     nextQuestion();
   };
 
@@ -225,30 +285,95 @@ const InterviewPractice: React.FC = () => {
   /* -------------------------------- Render -------------------------------- */
   if (flowStep === "setup") {
     return (
-      <div>
-        <h2 className="font-display text-3xl font-extrabold mb-4 text-black tracking-tight">
-          Choose Your Practice Type
-        </h2>
+      <div className="space-y-6">
+        <section className="rounded-2xl bg-sky-50 border border-sky-100 p-4 sm:p-5 space-y-4">
+          <div className="space-y-1">
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Choose your practice type
+            </h2>
+            <p className="text-sm text-slate-700">
+              There is no timer. Pick one option that feels easiest to start with today.
+            </p>
+          </div>
 
-        <p className="mb-6 text-slate-800">Choose how you'd like to practice today.</p>
+          {/* 3 square cards in one row on desktop, stacked on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {(Object.keys(questionSets) as PracticeType[]).map((type) => {
+              const meta = practiceMeta[type];
+              const isSelected = practiceType === type;
 
-        <div className="space-y-4">
-          {(Object.keys(questionSets) as PracticeType[]).map((type) => (
-            <button
-              key={type}
-              onClick={() => startPractice(type)}
-              className="w-full text-left p-6 bg-white border border-slate-300 rounded-lg shadow-sm
-                         hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-            >
-              <h3 className="font-semibold text-lg text-slate-900">{type}</h3>
-              <p className="text-sm text-slate-800">
-                Practice with common {type.toLowerCase()} questions.
-              </p>
-            </button>
-          ))}
-        </div>
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => startPractice(type)}
+                  className={`flex flex-col justify-between rounded-xl border px-3 py-3 aspect-square text-left transition-colors
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700
+                    ${
+                      isSelected
+                        ? "border-blue-900 bg-blue-900 text-white"
+                        : "border-slate-300 bg-white hover:bg-slate-100"
+                    }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-full text-lg ${
+                        isSelected
+                          ? "bg-blue-800 text-white"
+                          : "bg-sky-100 text-blue-900"
+                      }`}
+                    >
+                      {meta.icon}
+                    </span>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold leading-snug">
+                          {type}
+                        </h3>
+                        {isSelected && (
+                          <span className="inline-flex items-center rounded-full bg-blue-800 px-2 py-[2px] text-[0.65rem] font-medium">
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        className={`text-xs ${
+                          isSelected ? "text-slate-100/90" : "text-slate-600"
+                        }`}
+                      >
+                        {meta.tagline}
+                      </p>
+                    </div>
+                  </div>
 
-        <div className="mt-8 flex items-center gap-3 p-3 bg-slate-100 rounded-lg border border-slate-300">
+                  <div className="mt-3 inline-flex items-center gap-2 text-[0.7rem]">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        isSelected ? "bg-emerald-300" : "bg-slate-400"
+                      }`}
+                    />
+                    <span
+                      className={
+                        isSelected ? "text-slate-100/90" : "text-slate-600"
+                      }
+                    >
+                      Each answer is one small win. You can stop anytime.
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col gap-2 text-xs text-slate-700">
+            <p>
+              • You can switch practice types later. Progress is about small steps, not perfection.
+            </p>
+            <p>• If this feels like too much, choosing just one question is enough for today.</p>
+          </div>
+        </section>
+
+        <div className="mt-2 flex items-center gap-3 p-3 bg-slate-100 rounded-lg border border-slate-300">
           <input
             type="checkbox"
             id="calm-mode"
@@ -260,7 +385,9 @@ const InterviewPractice: React.FC = () => {
             <label htmlFor="calm-mode" className="font-semibold text-slate-900">
               Enable Calm Practice Mode
             </label>
-            <p className="text-sm text-slate-800">Slower pace with breathing reminders.</p>
+            <p className="text-sm text-slate-800">
+              Fewer prompts and gentle pacing. You stay in control.
+            </p>
           </div>
         </div>
 
@@ -283,7 +410,7 @@ const InterviewPractice: React.FC = () => {
         onClick={resetPractice}
         className="mb-4 text-sm font-semibold text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded"
       >
-        &larr; Back to Setup
+        &larr; Back to setup
       </button>
 
       <div className="p-4 bg-white rounded-lg border border-slate-300">
@@ -301,14 +428,17 @@ const InterviewPractice: React.FC = () => {
 
       {isCalmMode && (
         <div className="my-4 p-3 bg-sky-50 text-slate-900 rounded-lg text-center font-medium border border-sky-200">
-          Take a deep breath. You're doing great.
+          Take a slow breath. You can pause whenever you want.
         </div>
       )}
 
       <div className="mt-6">
         <div className="flex items-center justify-between mb-2">
-          <label htmlFor="answer" className="block text-lg font-medium text-slate-900">
-            Your Answer:
+          <label
+            htmlFor="answer"
+            className="block text-lg font-medium text-slate-900"
+          >
+            Your answer
           </label>
           <VoiceInputButton onTextReceived={handleVoiceInput} />
         </div>
@@ -317,7 +447,7 @@ const InterviewPractice: React.FC = () => {
           rows={10}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Type or use the microphone to speak your answer..."
+          placeholder="Type or speak your answer. Short is okay."
           className="w-full p-3 bg-white text-slate-900 placeholder:text-slate-600
                      border border-slate-300 rounded-lg
                      focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
@@ -325,7 +455,13 @@ const InterviewPractice: React.FC = () => {
           maxLength={MAX_ANSWER_LENGTH}
           aria-invalid={!!error}
         />
-        <div className={`text-right text-sm mt-1 ${answer.length > MAX_ANSWER_LENGTH - 100 ? "text-red-700" : "text-slate-800"}`}>
+        <div
+          className={`text-right text-sm mt-1 ${
+            answer.length > MAX_ANSWER_LENGTH - 100
+              ? "text-red-700"
+              : "text-slate-800"
+          }`}
+        >
           {answer.length} / {MAX_ANSWER_LENGTH}
         </div>
       </div>
@@ -334,7 +470,9 @@ const InterviewPractice: React.FC = () => {
 
       {flowStep === "summary" && feedback && (
         <div className="mt-8">
-          <h3 className="font-display text-2xl font-bold mb-4 text-slate-900">Session Summary</h3>
+          <h3 className="font-display text-2xl font-bold mb-4 text-slate-900">
+            Session summary
+          </h3>
           <FeedbackDisplay
             feedback={feedback}
             suggestions={suggestions}
