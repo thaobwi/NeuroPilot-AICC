@@ -60,7 +60,7 @@ const questionSets: Record<PracticeType, string[]> = {
 
 const practiceMeta: Record<
   PracticeType,
-  { tagline: string; icon: string }
+  { icon: string; tagline: string }
 > = {
   "STAR Interview": {
     icon: "⭐",
@@ -104,6 +104,7 @@ const InterviewPractice: React.FC<InterviewPracticeProps> = ({ onStepChange }) =
     setSaved(loadSavedQuestions());
   }, []);
 
+  // narrator dialogue + pose
   useEffect(() => {
     let dialogueKey = "";
     switch (flowStep) {
@@ -125,10 +126,12 @@ const InterviewPractice: React.FC<InterviewPracticeProps> = ({ onStepChange }) =
     if (dialogueKey) setNarratorDialogue(DIALOGUE[dialogueKey][language]);
   }, [flowStep, language, setNarratorDialogue, feedback, setNarratorState]);
 
+  // narrator thinking while loading
   useEffect(() => {
     if (isLoading) setNarratorState("thinking");
   }, [isLoading, setNarratorState]);
 
+  // drive top progress bar
   useEffect(() => {
     if (!onStepChange) return;
 
@@ -287,17 +290,12 @@ const InterviewPractice: React.FC<InterviewPracticeProps> = ({ onStepChange }) =
     return (
       <div className="space-y-6">
         <section className="rounded-2xl bg-sky-50 border border-sky-100 p-4 sm:p-5 space-y-4">
-          <div className="space-y-1">
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Choose your practice type
-            </h2>
-            <p className="text-sm text-slate-700">
-              There is no timer. Pick one option that feels easiest to start with today.
-            </p>
-          </div>
+          <p className="text-sm text-slate-700">
+            There is no timer. Pick one option that feels easiest to start with today.
+          </p>
 
-          {/* 3 square cards in one row on desktop, stacked on mobile */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* 3 cards in one row on desktop, stacked on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {(Object.keys(questionSets) as PracticeType[]).map((type) => {
               const meta = practiceMeta[type];
               const isSelected = practiceType === type;
@@ -307,56 +305,46 @@ const InterviewPractice: React.FC<InterviewPracticeProps> = ({ onStepChange }) =
                   key={type}
                   type="button"
                   onClick={() => startPractice(type)}
-                  className={`flex flex-col justify-between rounded-xl border px-3 py-3 aspect-square text-left transition-colors
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700
-                    ${
-                      isSelected
-                        ? "border-blue-900 bg-blue-900 text-white"
-                        : "border-slate-300 bg-white hover:bg-slate-100"
-                    }`}
+                  className="flex h-full flex-col justify-between rounded-2xl border border-blue-300 bg-blue-200 px-4 py-4 text-left
+                             transition-transform transition-colors duration-150 ease-out
+                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700
+                             hover:-translate-y-0.5 hover:border-blue-400 hover:bg-blue-300"
                 >
                   <div className="flex items-start gap-3">
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-full text-lg ${
-                        isSelected
-                          ? "bg-blue-800 text-white"
-                          : "bg-sky-100 text-blue-900"
-                      }`}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full text-lg
+                        ${
+                          isSelected
+                            ? "bg-blue-700 text-white"
+                            : "bg-blue-300 text-blue-900"
+                        }`}
                     >
                       {meta.icon}
                     </span>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold leading-snug">
+                        <h3 className="text-sm font-semibold leading-snug text-slate-900">
                           {type}
                         </h3>
                         {isSelected && (
-                          <span className="inline-flex items-center rounded-full bg-blue-800 px-2 py-[2px] text-[0.65rem] font-medium">
+                          <span className="inline-flex items-center rounded-full bg-blue-800 px-2 py-[2px] text-[0.65rem] font-medium text-white">
                             Selected
                           </span>
                         )}
                       </div>
-                      <p
-                        className={`text-xs ${
-                          isSelected ? "text-slate-100/90" : "text-slate-600"
-                        }`}
-                      >
+                      <p className="text-xs text-slate-900">
                         {meta.tagline}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-3 inline-flex items-center gap-2 text-[0.7rem]">
+                  <div className="mt-4 flex items-center gap-2 text-[0.7rem]">
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${
-                        isSelected ? "bg-emerald-300" : "bg-slate-400"
+                        isSelected ? "bg-emerald-400" : "bg-slate-500"
                       }`}
                     />
-                    <span
-                      className={
-                        isSelected ? "text-slate-100/90" : "text-slate-600"
-                      }
-                    >
+                    <span className="text-slate-900">
                       Each answer is one small win. You can stop anytime.
                     </span>
                   </div>
@@ -365,11 +353,10 @@ const InterviewPractice: React.FC<InterviewPracticeProps> = ({ onStepChange }) =
             })}
           </div>
 
-          <div className="flex flex-col gap-2 text-xs text-slate-700">
+          <div className="flex flex-col gap-1 text-xs text-slate-700">
             <p>
               • You can switch practice types later. Progress is about small steps, not perfection.
             </p>
-            <p>• If this feels like too much, choosing just one question is enough for today.</p>
           </div>
         </section>
 
