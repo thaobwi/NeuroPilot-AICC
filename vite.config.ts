@@ -8,22 +8,22 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
 
-    // GitHub Pages under /NeuroPilot-AICC/
-    // (You can keep the ternary, but locking it avoids surprises)
+    // Must match the GitHub repo name
     base: "/NeuroPilot-AICC/",
 
-    // Prefer Vite's import.meta.env with VITE_* keys
-    // Remove this whole "define" block after you migrate to VITE_*.
+    // Expose safe public keys only
     define: {
+      // Keep your current exposure of env if your app reads process.env.*
       "process.env.API_KEY": JSON.stringify(env.GEMINI_API_KEY),
       "process.env.GEMINI_API_KEY": JSON.stringify(env.GEMINI_API_KEY),
+      // (FYI: the Vite-native way is import.meta.env.VITE_*)
     },
 
     resolve: {
       alias: {
-        // '@' => project root (C:/.../NeuroPilot-AICC)
-        // why: your files are at ./components, ./constants, ./App.tsx, not under ./src
+        // If you prefer '@/...' to point to project root; change to 'src' if you want '@/components' from /src/components
         "@": path.resolve(__dirname, "."),
+        // "@": path.resolve(__dirname, "src"),
       },
     },
 
